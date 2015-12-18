@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Cell War Board Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="perlin.js" charset="utf-8"></script>
+    <script type="text/javascript">
+      var pos;
+
+      function array(dim, cnt) {
+        if(!cnt[0] || dim < 1 || cnt < 0) return 0;
+        var r = [], cntc = cnt.slice(0).splice(0, 1);
+        for(var i=0; i<cnt[0]; i++) {
+          r[i] = array(dim - 1, cntc);
+        }
+        return r;
+      }
+      // Amino Acids
+      var ax = array(2, [40, 40]);
+      // Fatty Acids
+      var fx = array(2, [40, 40]);
+      // Nutrients
+      var nx = array(2, [40, 40]);
+      // Glucose
+      var gx = array(2, [40, 40]);
+      // Starches/Complex Sugars
+      var sx = array(2, [40, 40]);
+      function _ready() {
+        pos = document.getElementById('position');
+
+        //Generate Maps
+        // init vars
+        var an = new ClassicalNoise, fn = new ClassicalNoise, nn = new ClassicalNoise, gn = new ClassicalNoise, sn = new ClassicalNoise;
+        //Setup Board
+        var board = document.getElementById('board'), row, definition, a, f, n, s, ss, cs, ai, fi, ni, si;
+        for(var y = 0; y < 40; y++) {
+          board.appendChild(row = document.createElement('tr'));
+          for(var x = 0; x < 40; x ++) {
+            row.appendChild(definition = document.createElement('td'));
+            addLargeTimeout(definition);
+            definition.setAttribute('x', x);
+            definition.setAttribute('y', y);
+            definition.appendChild(a = document.createElement('div'));
+            definition.appendChild(ai = document.createElement('input'));
+            definition.appendChild(f = document.createElement('div'));
+            definition.appendChild(fi = document.createElement('input'));
+            definition.appendChild(n = document.createElement('div'));
+            definition.appendChild(ni = document.createElement('input'));
+            definition.appendChild(s = document.createElement('div'));
+            definition.appendChild(si = document.createElement('input'));
+            definition.appendChild(ss = document.createElement('div'));
+            definition.appendChild(cs = document.createElement('div'));
+            a.className = 'a';
+            f.className = 'f';
+            n.className = 'n';
+            s.className = 's';
+            ss.className = 'ss';
+            cs.className = 'cs';
+            a.setAttribute('def', a.textContent = ax[x][y] = Math.floor(Math.pow(5*an.noise(x/5, y/5, x/40+y/1600), 2)));
+            f.setAttribute('def', f.textContent = fx[x][y] = Math.floor(Math.pow(4*fn.noise(x/5, y/5, x/40+y/1600), 2)));
+            n.setAttribute('def', n.textContent = nx[x][y] = Math.floor(Math.pow(6*nn.noise(x/5, y/5, x/40+y/1600), 2)));
+            ss.textContent = gx[x][y] = Math.floor(Math.pow(4*gn.noise(x/5, y/5, x/40+y/1600), 2));
+            cs.textContent = sx[x][y] = Math.floor(Math.pow(3*sn.noise(x/5, y/5, x/40+y/1600), 2));
+            s.setAttribute('def', s.textContent = gx[x][y] + sx[x][y] * 3);
+            a.style.backgroundColor = 'rgba(181, 255, 0, '+ax[x][y]/25+')';
+            f.style.backgroundColor = 'rgba(254, 198, 53, '+fx[x][y]/16+')';
+            n.style.backgroundColor = 'rgba(29, 179, 219, '+nx[x][y]/36+')';
+            s.style.backgroundColor = 'rgba(162, 9, 142, '+(gx[x][y]+sx[x][y])/25+')';
+            addHiddenInput(a, ai);
+            addHiddenInput(f, fi);
+            addHiddenInput(n, ni);
+            addHiddenInput(s, si);
+          }
+        }
+        document.getElementById('reset').onclick = function() {
+          for(var y=0; y<40; y++) {
+            row = board.children[y];
+            for(var x=0; x<40; x++) {
+              definition = row.children[x];
+              definition.children[0].textContent = definition.children[0].getAttribute('def');
+              definition.children[2].textContent = definition.children[2].getAttribute('def');
+              definition.children[4].textContent = definition.children[4].getAttribute('def');
+              definition.children[6].textContent = definition.children[6].getAttribute('def');
+            }
+          }
+        }
+      }
+
+      function hasImmediateChild(parent, child) {
+        if(parent == child) return true;
+        for(var i=0; i<parent.children.length; i++) {
+          if(parent.children[i] === child) return true;
+        }
+        return false;
+      }
+
+      function addLargeTimeout(definition) {
+        definition.onclick = function() {
+          definition.className = 'large';
+          position.textContent = '(' + definition.getAttribute('x') + ', ' + definition.getAttribute('y') + ')';
+          position.style.display = 'block';
+          var x = +definition.getAttribute('x'), y = +definition.getAttribute('y');
+          if(y == 39) y -= 1 + (90)/(document.getElementById('board').offsetWidth/40);
+          if(y == 0) y += 0.5;
+          if(x == 0) x += 0.2;
+          if(x == 39) x -= 0.2;
+          position.style.transform = 'translate(calc(' + (x*document.getElementById('board').offsetWidth/40-definition.offsetWidth/2) + 'px + 50%), ' + (y*document.getElementById('board').offsetHeight/40 + 74) + 'px)';
+          setTimeout(function() {
+            definition.onmouseout = function(event) {
+              if (!hasImmediateChild(definition, event.relatedTarget || event.toElement) && event.relatedTarget != definition) {
+                position.style.display = '';
+                definition.className = '';
+                definition.onmouseout = null;
+                definition.children[1].blur();
+                definition.children[3].blur();
+                definition.children[5].blur();
+                definition.children[7].blur();
+              }
+            }
+          }, 30);
+        }
+      }
+      function addHiddenInput(vis, invis) {
+        vis.onclick = function(e) {
+          if(vis.parentElement.className == 'large') {
+            invis.value = '';
+            invis.focus();
+          }
+          e.stopPropagation();
+          vis.parentElement.onclick();
+        }
+        invis.onkeyup = function() {
+          vis.textContent = invis.value;
+          var x = +vis.getAttribute('x'), y = +vis.getAttribute('y');
+          switch(vis.className) {
+            case 'a':
+              vis.style.backgroundColor = 'rgba(181, 255, 0, '+(+invis.value/25 > 1 ? 1 : +invis.value)+')';
+              break;
+            case 'f':
+              vis.style.backgroundColor = 'rgba(254, 198, 53, '+(+invis.value/16 > 1 ? 1 : +invis.value/16)+')';
+              break;
+            case 'n':
+              vis.style.backgroundColor = 'rgba(29, 179, 219, '+(+invis.value/36 > 1 ? 1 : +invis.value/36)+')';
+              break;
+            case 's':
+              vis.style.backgroundColor = 'rgba(162, 9, 142, '+(+invis.value/25 > 1 ? 1 : +invis.value/25)+')';
+              break;
+          }
+        }
+        invis.onblur = function() {
+          if(invis.value == '') vis.textContent = vis.getAttribute('def');
+        }
+      }
+    </script>
+    <style media="screen">
+      #board {
+        width: 100%;
+        height: 100%;
+        border-spacing: 0;
+        min-width: 1838px;
+      }
+      td {
+        border: 1px solid grey;
+        position: relative;
+        z-index: 100;
+        background-color: white;
+      }
+        td input {
+          display: block;
+          width: 0;
+          height: 0;
+          overflow: hidden;
+          border: none;
+          margin: 0;
+          padding: 0;
+        }
+      body, html {
+        margin: 0;
+        height: 2000px;
+      }
+
+      td.large {
+        transform: scale(2);
+        z-index: 110;
+      }
+      tr:first-child td.large {
+        transform-origin: top;
+      }
+      tr:first-child td.large:first-child {
+        transform-origin: top left;
+      }
+      tr:first-child td.large:last-child {
+        transform-origin: top right;
+      }
+      td.large:first-child {
+        transform-origin: left;
+      }
+      td.large:last-child {
+        transform-origin: right;
+      }
+      tr:last-child td.large {
+        transform-origin: bottom;
+      }
+      tr:last-child td.large:first-child {
+        transform-origin: bottom left;
+      }
+      tr:last-child td.large:last-child {
+        transform-origin: bottom right;
+      }
+      .a, .f, .n, .s {
+        position: absolute;
+        width: 50%;
+        height: 50%;
+        text-align: center;
+        cursor: default;
+      }
+      .a {
+        top: 0;
+        left: 0;
+      }
+      .f {
+        top: 0;
+        right: 0;
+      }
+      .n {
+        bottom: 0;
+        left: 0;
+      }
+      .ss {
+        display: none;
+      }
+      .cs {
+        display: none;
+      }
+      .s {
+        bottom: 0;
+        right: 0;
+      }
+
+      #position {
+        position: absolute;
+        display: none;
+        background-color: white;
+        top: 0;
+        left: 0;
+        z-index: 109;
+        box-shadow: 0 0 9px;
+      }
+
+      #reset {
+        width: 100%;
+        display: block;
+        height: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <table id="board">
+      <!-- Example Space
+      <tr>
+        <td>
+          <div class="a"></div> Amino Acids
+          <div class="f"></div> Fatty Acids
+          <div class="n"></div> Nutrients
+          <div class="s"></div> Sugars (complex and simple)
+          <div class="ss"></div> Simple Sugars
+          <div class="cs"></div> Complex Sugars
+        </td>
+      </tr>
+      -->
+    </table>
+    <div id="position"></div>
+    <button id="reset">Reset All Values</button>
+    <script>_ready();</script>
+  </body>
+</html>
