@@ -106,6 +106,7 @@
           if(x == 0) x += 0.2;
           if(x == 39) x -= 0.2;
           position.style.transform = 'translate(calc(' + (x*document.getElementById('board').offsetWidth/40-definition.offsetWidth/2) + 'px + 50%), ' + (y*document.getElementById('board').offsetHeight/40 + 74) + 'px)';
+          position.style.webkitTransform = position.style.transform;
           setTimeout(function() {
             definition.onmouseout = function(event) {
               if (!hasImmediateChild(definition, event.relatedTarget || event.toElement) && event.relatedTarget != definition) {
@@ -181,32 +182,41 @@
       }
 
       td.large {
-        transform: scale(2);
+        transform:scale(2);
+        -webkit-transform:scale(2);
         z-index: 110;
       }
       tr:first-child td.large {
         transform-origin: top;
+        -webkit-transform-origin: top;
       }
       tr:first-child td.large:first-child {
         transform-origin: top left;
+        -webkit-transform-origin: top left;
       }
       tr:first-child td.large:last-child {
         transform-origin: top right;
+        -webkit-transform-origin: top right;
       }
       td.large:first-child {
         transform-origin: left;
+        -webkit-transform-origin: left;
       }
       td.large:last-child {
         transform-origin: right;
+        -webkit-transform-origin: right;
       }
       tr:last-child td.large {
         transform-origin: bottom;
+        -webkit-transform-origin: bottom;
       }
       tr:last-child td.large:first-child {
         transform-origin: bottom left;
+        -webkit-transform-origin: bottom left;
       }
       tr:last-child td.large:last-child {
         transform-origin: bottom right;
+        -webkit-transform-origin: bottom right;
       }
       .a, .f, .n, .s {
         position: absolute;
