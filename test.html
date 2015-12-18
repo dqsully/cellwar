@@ -98,7 +98,7 @@
       function addLargeTimeout(definition) {
         definition.onclick = function() {
           definition.className = 'large';
-          position.textContent = '(' + definition.getAttribute('x') + ', ' + definition.getAttribute('y') + ')';
+          position.textContent = '(' + (definition.getAttribute('x')+1) + ', ' + (definition.getAttribute('y')+1) + ')';
           position.style.display = 'block';
           var x = +definition.getAttribute('x'), y = +definition.getAttribute('y');
           if(y == 39) y -= 1 + (90)/(document.getElementById('board').offsetWidth/40);
